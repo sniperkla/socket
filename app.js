@@ -41,8 +41,12 @@ ws.on('open', () => {
         }
       }
 
+      console.log('debug1')
       const listenKeyResponse = await axios(listenKeyRequest)
       const listenKey = listenKeyResponse.data.listenKey
+
+
+      console.log('debug2')
 
       // Send a user data stream request using the listenKey
       const userDataStreamRequest = {
@@ -53,27 +57,15 @@ ws.on('open', () => {
           'X-MBX-TIMESTAMP': Date.now() // Update timestamp for PUT request
         },
         data: {
-          listenKey: listenKey
+          listenKey: listenKey // Include listenKey here
         }
       }
+      console.log('debug3')
 
       await axios(userDataStreamRequest)
       console.log('User data stream started')
 
-      // Handle incoming WebSocket messages
-      ws.on('message', (message) => {
-        const data = JSON.parse(message)
-
-        // Process the received data, including PNL information
-        if (data.e === 'executionReport') {
-          const pnl = data.p - data.q // Calculate PNL (price - quantity)
-          console.log('PNL:', pnl)
-          // ... other processing as needed
-        }
-      })
-
-      // Keepalive logic (optional)
-      // ...
+      // ... rest of the code
     } catch (error) {
       console.error('Error initiating user data stream:', error)
     }
