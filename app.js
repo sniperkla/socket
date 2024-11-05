@@ -38,8 +38,9 @@ const initiateUserDataStream = async () => {
 
     // Listen for messages
     ws.on('message', (data) => {
+      console.log('fuku')
+
       const parsedData = JSON.parse(data) // Parse the JSON message
-      console.log('parsedData', parsedData)
       if (parsedData.e === 'ACCOUNT_UPDATE') {
         const positions = parsedData.a?.P || [] // Access positions array
         positions.forEach((position) => {
