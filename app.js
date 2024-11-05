@@ -9,80 +9,70 @@ const apiSecret =
   '8J9H6Mp2LcXyjn6FclRBBk8DcPUUmEfVxxxBN39UAofSWyTeEtfb4ZcykhxzqyIC'
 
 // Function to generate Binance's signature
-function generateSignature(timestamp, apiKey, apiSecret) {
-  const message = timestamp + apiKey + apiSecret
-  const hash = crypto
+function generateSignature(queryString, apiSecret) {
+  return crypto
     .createHmac('sha256', apiSecret)
-    .update(message)
+    .update(queryString)
     .digest('hex')
-  return hash
 }
 
-// Create a WebSocket connection
-const ws = new WebSocket('wss://stream.binance.com:9443/ws/!userData')
+// Function to initiate user data stream
+const initiateUserDataStream = async () => {
+  try {
+    // Get a listenKey from Binance
+    const timestamp = Date.now()
+    const queryString = `timestamp=${timestamp}`
+    const signature = generateSignature(queryString, apiSecret)
 
-ws.on('open', () => {
-  console.log('WebSocket connection established')
+    const listenKeyResponse = await axios.post(
+      `https://fapi.binance.com/fapi/v1/listenKey?${queryString}&signature=${signature}`,
+      {},
+      { headers: { 'X-MBX-APIKEY': apiKey } }
+    )
 
-  // Function to initiate user data stream
-  const initiateUserDataStream = async () => {
-    try {
-      // Get a listenKey from Binance
-      const timestamp = Date.now().toString()
-      const signature = generateSignature(timestamp, apiKey, apiSecret) // Adjust signature generation for Futures
+    const listenKey = listenKeyResponse.data.listenKey
+    console.log('Listen Key received:', listenKey)
 
-      const listenKeyRequest = {
-        method: 'POST',
-        url: 'https://fapi.binance.com/fapi/v1/listenKey', // Futures endpoint
-        headers: {
-          'X-MBX-APIKEY': apiKey,
-          'X-MBX-TIMESTAMP': timestamp,
-          'X-MBX-SIGNATURE': signature
-        }
+    // Connect to WebSocket using the listenKey
+    const ws = new WebSocket(`wss://fstream.binance.com/ws/${listenKey}`)
+
+    ws.on('open', () => {
+      console.log('WebSocket connection established for user data stream')
+    })
+
+    ws.on('message', (data) => {
+      console.log('Received message:', data)
+    })
+
+    ws.on('error', (error) => {
+      console.error('WebSocket error:', error)
+    })
+
+    ws.on('close', () => {
+      console.log('WebSocket connection closed')
+    })
+
+    // Keepalive function to prevent listenKey expiration
+    const keepAliveInterval = setInterval(async () => {
+      try {
+        await axios.put(
+          `https://fapi.binance.com/fapi/v1/listenKey?${queryString}&signature=${signature}`,
+          {},
+          { headers: { 'X-MBX-APIKEY': apiKey } }
+        )
+        console.log('Keepalive sent for listenKey')
+      } catch (err) {
+        console.error('Error sending keepalive for listenKey:', err)
+        clearInterval(keepAliveInterval)
       }
-
-      console.log('debug1', timestamp)
-      const listenKeyResponse = await axios(listenKeyRequest)
-      const listenKey = listenKeyResponse.data.listenKey
-
-      console.log('debug2')
-
-      // Send a user data stream request using the listenKey
-      const userDataStreamRequest = {
-        method: 'PUT',
-        url: 'https://fapi.binance.com/fapi/v1/userDataStream', // Example for USDⓈ-M Futures
-        headers: {
-          'X-MBX-APIKEY': apiKey,
-          'X-MBX-TIMESTAMP': timestamp // Convert timestamp to string
-        },
-        data: {
-          listenKey: listenKey
-          // Optional: Include additional parameters for listenKey creation (refer to Binance Futures API documentation)
-        }
-      }
-      console.log('debug3')
-
-      await axios(userDataStreamRequest)
-      console.log('User data stream started')
-
-      // ... rest of the code
-    } catch (error) {
-      console.error('Error initiating user data stream:', error)
-    }
+    }, 30 * 60 * 1000) // Send keepalive every 30 minutes
+  } catch (error) {
+    console.error(
+      'Error initiating user data stream:',
+      error.response ? error.response.data : error.message
+    )
   }
+}
 
-  // Initiate the user data stream
-  initiateUserDataStream()
-})
-
-ws.on('error', (error) => {
-  console.error('WebSocket error:', error)
-})
-
-ws.on('close', () => {
-  console.log('WebSocket connection closed')
-})
-
-// Optional: Keepalive logic to extend listenKey validity
-// You can implement a periodic keepalive request using a timer
-// to prevent the listenKey from expiring after 60 minutes.
+// Start user data stream
+initiateUserDataStream()
