@@ -1,7 +1,8 @@
 const WebSocket = require('ws')
 const axios = require('axios')
-const binanceWsUrl = 'wss://stream.binance.com:9443/ws/!userData'
+const crypto = require('crypto') // Required for signature generation
 
+// Replace with your actual API key and secret
 const apiKey =
   'bfKne23Wn3GygOv9bL4ri8BCqgIRYbtoitPcVT73NYfEjZ8QxKESMa6kaBpTXacD'
 const apiSecret =
@@ -18,81 +19,68 @@ function generateSignature(timestamp, apiKey, apiSecret) {
 }
 
 // Create a WebSocket connection
-const ws = new WebSocket(binanceWsUrl)
+const ws = new WebSocket('wss://stream.binance.com:9443/ws/!userData')
 
 ws.on('open', () => {
-  console.log('WebSocket connected')
+  console.log('WebSocket connection established')
 
-  // Send a listen key request to Binance
-  const listenKeyRequest = {
-    method: 'POST',
-    url: 'https://api.binance.com/api/v3/userDataStream',
-    headers: {
-      'X-MBX-APIKEY': apiKey
-    }
-  }
+  // Function to initiate user data stream
+  const initiateUserDataStream = async () => {
+    try {
+      // Get a listenKey from Binance
+      const timestamp = Date.now()
+      const signature = generateSignature(timestamp, apiKey, apiSecret)
 
-  axios(listenKeyRequest)
-    .then((response) => {
-      console.log('this is listenkey', response.data)
-      const listenKey = response.data.listenKey
-      // Send a user data stream request to Binance
+      const listenKeyRequest = {
+        method: 'POST',
+        url: 'https://api.binance.com/api/v3/userDataStream',
+        headers: {
+          'X-MBX-APIKEY': apiKey,
+          'X-MBX-TIMESTAMP': timestamp,
+          'X-MBX-SIGNATURE': signature
+        }
+      }
+
+      const listenKeyResponse = await axios(listenKeyRequest)
+      const listenKey = listenKeyResponse.data.listenKey
+
+      // Send a user data stream request using the listenKey
       const userDataStreamRequest = {
         method: 'PUT',
-        url: `https://api.binance.com/api/v3/userDataStream`,
+        url: 'https://api.binance.com/api/v3/userDataStream',
         headers: {
-          'X-MBX-APIKEY': apiKey
+          'X-MBX-APIKEY': apiKey,
+          'X-MBX-TIMESTAMP': Date.now() // Update timestamp for PUT request
         },
         data: {
           listenKey: listenKey
         }
       }
 
-      axios(userDataStreamRequest)
-        .then(() => {
-          console.log('User data stream started')
+      await axios(userDataStreamRequest)
+      console.log('User data stream started')
 
-          // Send a keepalive request every 30 minutes
-          setInterval(() => {
-            const keepaliveRequest = {
-              method: 'PUT',
-              url: `https://api.binance.com/api/v3/userDataStream`,
-              headers: {
-                'X-MBX-APIKEY': apiKey
-              },
-              data: {
-                listenKey: listenKey
-              }
-            }
+      // Handle incoming WebSocket messages
+      ws.on('message', (message) => {
+        const data = JSON.parse(message)
 
-            axios(keepaliveRequest)
-              .then(() => {
-                console.log('Keepalive sent')
-              })
-              .catch((error) => {
-                console.error('Keepalive error:', error)
-              })
-          }, 1800000) // 30 minutes
+        // Process the received data, including PNL information
+        if (data.e === 'executionReport') {
+          const pnl = data.p - data.q // Calculate PNL (price - quantity)
+          console.log('PNL:', pnl)
+          // ... other processing as needed
+        }
+      })
 
-          // Handle incoming WebSocket messages
-          ws.on('message', (message) => {
-            const data = JSON.parse(message)
+      // Keepalive logic (optional)
+      // ...
+    } catch (error) {
+      console.error('Error initiating user data stream:', error)
+    }
+  }
 
-            // Process the received data, including PNL information
-            if (data.e === 'executionReport') {
-              const pnl = data.n - data.p // Calculate PNL
-              console.log('PNL:', pnl)
-              // ... other processing as needed
-            }
-          })
-        })
-        .catch((error) => {
-          console.error('User data stream error:', error)
-        })
-    })
-    .catch((error) => {
-      console.error('Listen key request error:', error)
-    })
+  // Initiate the user data stream
+  initiateUserDataStream()
 })
 
 ws.on('error', (error) => {
@@ -100,5 +88,9 @@ ws.on('error', (error) => {
 })
 
 ws.on('close', () => {
-  console.log('WebSocket closed')
+  console.log('WebSocket connection closed')
 })
+
+// Optional: Keepalive logic to extend listenKey validity
+// You can implement a periodic keepalive request using a timer
+// to prevent the listenKey from expiring after 60 minutes.
