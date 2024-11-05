@@ -50,6 +50,16 @@ const initiateUserDataStream = async () => {
       }
     })
     ws.on('open', () => {
+      const parsedData = JSON.parse(data) // Parse the JSON message
+
+      if (parsedData.e === 'ACCOUNT_UPDATE') {
+        const positions = parsedData.a?.P || [] // Access positions array
+
+        positions.forEach((position) => {
+          const { unPNL } = position // Extract unPNL from each position
+          console.log('Unrealized PNL:', unPNL) // Print only unPNL
+        })
+      }
       console.log('WebSocket connection established for user data stream')
     })
 
