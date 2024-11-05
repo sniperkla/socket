@@ -1,6 +1,7 @@
 const WebSocket = require('ws')
 const axios = require('axios')
-const crypto = require('crypto')
+const CryptoJS = require('crypto-js')
+const axios = require('axios')
 
 const apiKey =
   'bfKne23Wn3GygOv9bL4ri8BCqgIRYbtoitPcVT73NYfEjZ8QxKESMa6kaBpTXacD'
@@ -9,10 +10,9 @@ const apiSecret =
 
 // Function to generate Binance's signature
 function generateSignature(queryString, apiSecret) {
-  return crypto
-    .createHmac('sha256', apiSecret)
-    .update(queryString)
-    .digest('hex')
+  const hmac = CryptoJS.HmacSHA256(queryString, apiSecret)
+  const signature = hmac.toString(CryptoJS.enc.Hex) // Convert to hexadecimal string
+  return signature
 }
 
 // Function to initiate user data stream and connect to WebSocket
