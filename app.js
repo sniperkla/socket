@@ -32,10 +32,9 @@ ws.on('open', () => {
     }
   }
 
-  console.log('this is listenkey', listenKeyRequest)
-
   axios(listenKeyRequest)
     .then((response) => {
+      console.log('this is listenkey', response.data)
       const listenKey = response.data.listenKey
       // Send a user data stream request to Binance
       const userDataStreamRequest = {
