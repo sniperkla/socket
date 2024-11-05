@@ -29,11 +29,11 @@ ws.on('open', () => {
     try {
       // Get a listenKey from Binance
       const timestamp = Date.now()
-      const signature = generateSignature(timestamp, apiKey, apiSecret)
+      const signature = generateSignature(timestamp, apiKey, apiSecret) // Adjust signature generation for Futures
 
       const listenKeyRequest = {
         method: 'POST',
-        url: 'https://api.binance.com/api/v3/userDataStream',
+        url: 'https://fapi.binance.com/fapi/v1/listenKey', // Futures endpoint
         headers: {
           'X-MBX-APIKEY': apiKey,
           'X-MBX-TIMESTAMP': timestamp,
@@ -45,19 +45,20 @@ ws.on('open', () => {
       const listenKeyResponse = await axios(listenKeyRequest)
       const listenKey = listenKeyResponse.data.listenKey
 
-
       console.log('debug2')
 
       // Send a user data stream request using the listenKey
       const userDataStreamRequest = {
         method: 'PUT',
-        url: 'https://api.binance.com/api/v3/userDataStream',
+        // Update endpoint based on your futures type (USDⓈ-M or Coin-Margined)
+        url: 'https://fapi.binance.com/fapi/v1/userDataStream', // Example for USDⓈ-M Futures
         headers: {
           'X-MBX-APIKEY': apiKey,
           'X-MBX-TIMESTAMP': Date.now() // Update timestamp for PUT request
         },
         data: {
-          listenKey: listenKey // Include listenKey here
+          listenKey: listenKey
+          // Optional: Include additional parameters for listenKey creation (refer to Binance Futures API documentation)
         }
       }
       console.log('debug3')
