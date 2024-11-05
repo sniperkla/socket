@@ -65,7 +65,7 @@ const initiateUserDataStream = async () => {
         console.error('Error sending keepalive for listenKey:', err)
         clearInterval(keepAliveInterval)
       }
-    }, 30 * 60 * 1000) // Send keepalive every 30 minutes
+    }, 3000) // Send keepalive every 30 minutes
   } catch (error) {
     console.error(
       'Error initiating user data stream:',
