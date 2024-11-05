@@ -51,10 +51,9 @@ ws.on('open', () => {
       const userDataStreamRequest = {
         method: 'PUT',
         // Update endpoint based on your futures type (USDⓈ-M or Coin-Margined)
-        url: 'https://fapi.binance.com/fapi/v1/userDataStream', // Example for USDⓈ-M Futures
+        url: `https://fapi.binance.com/fapi/v1/userDataStream&timestamp=${timestamp}`, // Example for USDⓈ-M Futures
         headers: {
-          'X-MBX-APIKEY': apiKey,
-          'X-MBX-TIMESTAMP': timestamp // Update timestamp for PUT request
+          'X-MBX-APIKEY': apiKey
         },
         data: {
           listenKey: listenKey
