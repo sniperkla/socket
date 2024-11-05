@@ -6,7 +6,7 @@ const crypto = require('crypto')
 const apiKey =
   'bfKne23Wn3GygOv9bL4ri8BCqgIRYbtoitPcVT73NYfEjZ8QxKESMa6kaBpTXacD'
 const apiSecret =
-  '8J9H6Mp2LcXyjn6FclRBBk8DcPUUmEfVxxxBN39UAofSWyTeEtfb4ZcykhxzqyIC'
+  '8J9H6Mp2LcXyjn6FclRBBk8DcPUUmEfVxxxBN39UAofSWyTeEtfb43ZcykhxzqyIC'
 
 // Function to generate Binance's signature
 function generateSignature(queryString, apiSecret) {
@@ -32,14 +32,11 @@ const initiateUserDataStream = async () => {
 
     const listenKey = listenKeyResponse.data.listenKey
     console.log('Listen Key received:', listenKey)
-
     // Connect to WebSocket using the listenKey
     const ws = new WebSocket(`wss://fstream.binance.com/ws/${listenKey}`)
-
     // Listen for messages
     ws.on('message', (data) => {
-      console.log('fuku')
-
+      console.log('fukufrt')
       const parsedData = JSON.parse(data) // Parse the JSON message
       if (parsedData.e === 'ACCOUNT_UPDATE') {
         const positions = parsedData.a?.P || [] // Access positions array
