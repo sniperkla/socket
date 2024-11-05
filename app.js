@@ -2,11 +2,10 @@ const WebSocket = require('ws')
 const axios = require('axios')
 const crypto = require('crypto')
 
-// Replace with your actual API key and secret
 const apiKey =
   'bfKne23Wn3GygOv9bL4ri8BCqgIRYbtoitPcVT73NYfEjZ8QxKESMa6kaBpTXacD'
 const apiSecret =
-  '8J9H6Mp2LcXyjn6FclRBBk8DcPUUmEfVxxxBN39UAofSWyTeEtfb43ZcykhxzqyIC'
+  '8J9H6Mp2LcXyjn6FclRBBk8DcPUUmEfVxxxBN39UAofSWyTeEtfb4ZcykhxzqyIC'
 
 // Function to generate Binance's signature
 function generateSignature(queryString, apiSecret) {
@@ -16,7 +15,7 @@ function generateSignature(queryString, apiSecret) {
     .digest('hex')
 }
 
-// Function to initiate user data stream
+// Function to initiate user data stream and connect to WebSocket
 const initiateUserDataStream = async () => {
   try {
     // Get a listenKey from Binance
@@ -32,20 +31,30 @@ const initiateUserDataStream = async () => {
 
     const listenKey = listenKeyResponse.data.listenKey
     console.log('Listen Key received:', listenKey)
+
     // Connect to WebSocket using the listenKey
     const ws = new WebSocket(`wss://fstream.binance.com/ws/${listenKey}`)
+
     // Listen for messages
     ws.on('message', (data) => {
-      console.log('fukufrt')
-      const parsedData = JSON.parse(data) // Parse the JSON message
+      const parsedData = JSON.parse(data)
+
+      // Check for account updates
       if (parsedData.e === 'ACCOUNT_UPDATE') {
-        const positions = parsedData.a?.P || [] // Access positions array
-        positions.forEach((position) => {
-          const { unPNL } = position // Extract unPNL from each position
-          console.log('Unrealized PNL:', unPNL) // Print only unPNL
+        const balances = parsedData.a?.B || [] // Access balances array
+        balances.forEach((balance) => {
+          const {
+            a: asset,
+            wb: walletBalance,
+            cw: crossWalletBalance
+          } = balance // Extract fields
+          console.log(
+            `Asset: ${asset}, Wallet Balance: ${walletBalance}, Cross Wallet Balance: ${crossWalletBalance}`
+          )
         })
       }
     })
+
     ws.on('open', () => {
       console.log('WebSocket connection established for user data stream')
     })
@@ -71,7 +80,7 @@ const initiateUserDataStream = async () => {
         console.error('Error sending keepalive for listenKey:', err)
         clearInterval(keepAliveInterval) // Stop keepalive if it fails
       }
-    }, 3000) // Send keepalive every 30 minutes
+    }, 50000) // Send keepalive every 30 minutes
   } catch (error) {
     console.error(
       'Error initiating user data stream:',
