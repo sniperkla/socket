@@ -54,7 +54,7 @@ ws.on('open', () => {
         url: 'https://fapi.binance.com/fapi/v1/userDataStream', // Example for USDⓈ-M Futures
         headers: {
           'X-MBX-APIKEY': apiKey,
-          'X-MBX-TIMESTAMP': Date.now() // Update timestamp for PUT request
+          'X-MBX-TIMESTAMP': timestamp // Update timestamp for PUT request
         },
         data: {
           listenKey: listenKey
