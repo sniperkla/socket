@@ -1,7 +1,6 @@
 const WebSocket = require('ws')
 const axios = require('axios')
 const CryptoJS = require('crypto-js')
-const axios = require('axios')
 
 const apiKey =
   'bfKne23Wn3GygOv9bL4ri8BCqgIRYbtoitPcVT73NYfEjZ8QxKESMa6kaBpTXacD'
