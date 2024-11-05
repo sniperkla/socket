@@ -41,7 +41,7 @@ ws.on('open', () => {
         }
       }
 
-      console.log('debug1')
+      console.log('debug1', timestamp)
       const listenKeyResponse = await axios(listenKeyRequest)
       const listenKey = listenKeyResponse.data.listenKey
 
