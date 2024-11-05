@@ -39,10 +39,9 @@ const initiateUserDataStream = async () => {
     // Listen for messages
     ws.on('message', (data) => {
       const parsedData = JSON.parse(data) // Parse the JSON message
-
+      console.log('parsedData', parsedData)
       if (parsedData.e === 'ACCOUNT_UPDATE') {
         const positions = parsedData.a?.P || [] // Access positions array
-
         positions.forEach((position) => {
           const { unPNL } = position // Extract unPNL from each position
           console.log('Unrealized PNL:', unPNL) // Print only unPNL
