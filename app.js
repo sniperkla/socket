@@ -39,17 +39,16 @@ const initiateUserDataStream = async () => {
     // Listen for messages
     ws.on('message', (data) => {
       const parsedData = JSON.parse(data) // Parse the JSON message
-      console.log('Received data:', parsedData) // Output data
-      // Process the data as needed
-      if (parsedData.e === 'ORDER_TRADE_UPDATE') {
-        console.log('Order update:', parsedData)
-        // Handle order update
-      } else if (parsedData.e === 'ACCOUNT_UPDATE') {
-        console.log('Account update:', parsedData)
-        // Handle account balance or position update
+
+      if (parsedData.e === 'ACCOUNT_UPDATE') {
+        const positions = parsedData.a?.P || [] // Access positions array
+
+        positions.forEach((position) => {
+          const { unPNL } = position // Extract unPNL from each position
+          console.log('Unrealized PNL:', unPNL) // Print only unPNL
+        })
       }
     })
-
     ws.on('open', () => {
       console.log('WebSocket connection established for user data stream')
     })
