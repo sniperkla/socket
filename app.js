@@ -28,7 +28,7 @@ ws.on('open', () => {
   const initiateUserDataStream = async () => {
     try {
       // Get a listenKey from Binance
-      const timestamp = Date.now()
+      const timestamp = Date.now().toString()
       const signature = generateSignature(timestamp, apiKey, apiSecret) // Adjust signature generation for Futures
 
       const listenKeyRequest = {
@@ -53,7 +53,7 @@ ws.on('open', () => {
         url: 'https://fapi.binance.com/fapi/v1/userDataStream', // Example for USDⓈ-M Futures
         headers: {
           'X-MBX-APIKEY': apiKey,
-          'X-MBX-TIMESTAMP': Date.now().toString() // Convert timestamp to string
+          'X-MBX-TIMESTAMP': timestamp // Convert timestamp to string
         },
         data: {
           listenKey: listenKey
