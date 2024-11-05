@@ -2,8 +2,10 @@ const WebSocket = require('ws')
 const axios = require('axios')
 const binanceWsUrl = 'wss://stream.binance.com:9443/ws/!userData'
 
-const apiKey = 'bfKne23Wn3GygOv9bL4ri8BCqgIRYbtoitPcVT73NYfEjZ8QxKESMa6kaBpTXacD'
-const apiSecret = '8J9H6Mp2LcXyjn6FclRBBk8DcPUUmEfVxxxBN39UAofSWyTeEtfb4ZcykhxzqyIC'
+const apiKey =
+  'bfKne23Wn3GygOv9bL4ri8BCqgIRYbtoitPcVT73NYfEjZ8QxKESMa6kaBpTXacD'
+const apiSecret =
+  '8J9H6Mp2LcXyjn6FclRBBk8DcPUUmEfVxxxBN39UAofSWyTeEtfb4ZcykhxzqyIC'
 
 // Function to generate Binance's signature
 function generateSignature(timestamp, apiKey, apiSecret) {
@@ -30,10 +32,11 @@ ws.on('open', () => {
     }
   }
 
+  console.log('this is listenkey', listenKeyRequest)
+
   axios(listenKeyRequest)
     .then((response) => {
       const listenKey = response.data.listenKey
-
       // Send a user data stream request to Binance
       const userDataStreamRequest = {
         method: 'PUT',
